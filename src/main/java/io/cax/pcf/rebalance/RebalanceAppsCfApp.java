@@ -21,8 +21,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.util.stream.Collectors;
-
 
 @SpringBootApplication
 public class RebalanceAppsCfApp implements CommandLineRunner {
@@ -84,7 +82,7 @@ public class RebalanceAppsCfApp implements CommandLineRunner {
         cloudFoundryOperations
                 .applications()
                 .list()
-                .toStream().collect(Collectors.toList())
+                .toStream()
                 .forEach(applicationSummary -> {
                     cloudFoundryOperations.applications().restart(RestartApplicationRequest
                             .builder()
