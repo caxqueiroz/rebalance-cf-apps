@@ -10,5 +10,5 @@ $ mvn clean package
 ### To run
 
 ```
-$ java -jar target/rebalanceapps-0.0.1-SNAPSHOT.jar --cf.host=<api address> --cf.username=<cf username> --cf.password=<cf user password>
+$ java -jar target/rebalanceapps-0.0.1-SNAPSHOT.jar --cf.api=<api address> --cf.username=<cf username> --cf.password=<cf user password> --cf.org=<organisation> --cf.space=<space>
 ```
