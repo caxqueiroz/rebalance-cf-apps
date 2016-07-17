@@ -3,12 +3,15 @@ package io.cax.pcf.rebalance;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
-import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
+import org.cloudfoundry.operations.applications.ApplicationSummary;
+import org.cloudfoundry.operations.applications.RestartApplicationRequest;
 import org.cloudfoundry.reactor.ConnectionContext;
 import org.cloudfoundry.reactor.DefaultConnectionContext;
 import org.cloudfoundry.reactor.TokenProvider;
 import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +21,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 
 
 @SpringBootApplication
@@ -34,9 +37,10 @@ public class RebalanceAppsCfApp implements CommandLineRunner {
     CloudFoundryOperations cloudFoundryOperations;
 
     @Bean
-    DefaultConnectionContext connectionContext(@Value("${cf.host}") String apiHost) {
+    DefaultConnectionContext connectionContext(@Value("${cf.api}") String apiHost) {
         return DefaultConnectionContext.builder()
                 .apiHost(apiHost)
+                .skipSslValidation(true)
                 .build();
     }
 
@@ -79,15 +83,42 @@ public class RebalanceAppsCfApp implements CommandLineRunner {
 
         cloudFoundryOperations
                 .applications()
-                .list().toStream()
-                .forEach(e -> IntStream.range(0, e.getInstances()).forEach(i -> cloudFoundryOperations
-                        .applications()
-                        .restartInstance(RestartApplicationInstanceRequest
-                                .builder()
-                                .name(e.getName())
-                                .instanceIndex(i)
-                                .build())));
+                .list()
+                .toStream().collect(Collectors.toList())
+                .forEach(applicationSummary -> {
+                    cloudFoundryOperations.applications().restart(RestartApplicationRequest
+                            .builder()
+                            .name(applicationSummary.getName())
+                            .build()).subscribe(new MySubscriber(applicationSummary));
+                });
 
 
+    }
+
+    private static class MySubscriber implements Subscriber<Void> {
+        private final ApplicationSummary applicationSummary;
+
+        public MySubscriber(ApplicationSummary applicationSummary) {
+            this.applicationSummary = applicationSummary;
+        }
+
+        @Override
+        public void onSubscribe(Subscription subscription) {
+        }
+
+        @Override
+        public void onNext(Void aVoid) {
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            LOG.error("App restart error", throwable);
+            LOG.error("app: " + applicationSummary.getName() + " error!!");
+        }
+
+        @Override
+        public void onComplete() {
+            LOG.info("app: " + applicationSummary.getName() + " started!!");
+        }
     }
 }
