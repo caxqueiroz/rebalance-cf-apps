@@ -31,9 +31,14 @@
 
 		<dependency>
 			<groupId>org.cloudfoundry</groupId>
-			<artifactId>cloudfoundry-client-spring</artifactId>
+			<artifactId>cloudfoundry-client-reactor</artifactId>
 			<version>2.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
+        <dependency>
+            <groupId>org.cloudfoundry</groupId>
+            <artifactId>cloudfoundry-client-spring</artifactId>
+            <version>2.0.0.BUILD-SNAPSHOT</version>
+        </dependency>
 		<dependency>
 			<groupId>org.cloudfoundry</groupId>
 			<artifactId>cloudfoundry-operations</artifactId>
@@ -42,12 +47,12 @@
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
-			<version>2.5.0.BUILD-SNAPSHOT</version>
+			<version>3.0.0.BUILD-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-netty</artifactId>
-			<version>2.5.0.BUILD-SNAPSHOT</version>
+			<version>0.5.0.BUILD-SNAPSHOT</version>
 		</dependency>
 		
 
@@ -75,6 +80,12 @@
 			<id>spring-releases</id>
 			<name>Spring Releases</name>
 			<url>http://repo.spring.io/release</url>
+		</repository>
+
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>http://repo.spring.io/milestone</url>
 		</repository>
 	</repositories>
 </project>

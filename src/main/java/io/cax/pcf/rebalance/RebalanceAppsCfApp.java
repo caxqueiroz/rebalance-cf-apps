@@ -2,7 +2,7 @@ package io.cax.pcf.rebalance;
 
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.CloudFoundryOperations;
-import org.cloudfoundry.operations.CloudFoundryOperationsBuilder;
+import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
 import org.cloudfoundry.spring.client.SpringCloudFoundryClient;
 import org.slf4j.Logger;
@@ -21,6 +21,13 @@ import java.util.stream.IntStream;
 public class RebalanceAppsCfApp implements CommandLineRunner {
 
     static final Logger LOG = LoggerFactory.getLogger(RebalanceAppsCfApp.class);
+
+
+    @Value("${cf.org}")
+    private String organisation;
+
+    @Value("${cf.space}")
+    private String space;
 
     @Autowired
     CloudFoundryClient cloudFoundryClient;
@@ -45,23 +52,25 @@ public class RebalanceAppsCfApp implements CommandLineRunner {
     public void run(String... strings) throws Exception {
 
 
-        CloudFoundryOperations cloudFoundryOperations = new CloudFoundryOperationsBuilder()
+        CloudFoundryOperations cloudFoundryOperations = DefaultCloudFoundryOperations.builder()
                 .cloudFoundryClient(cloudFoundryClient)
-                .target("pcfdev-org", "pcfdev-space")
+                .organization(organisation)
+                .space(space)
                 .build();
+
+
 
 
         cloudFoundryOperations
                 .applications()
-                .list()
-                .stream()
+                .list().toStream()
                 .forEach(e -> IntStream.range(0, e.getInstances()).forEach(i -> cloudFoundryOperations
                         .applications()
                         .restartInstance(RestartApplicationInstanceRequest
                                 .builder()
                                 .name(e.getName())
                                 .instanceIndex(i)
-                                .build()).get()));
+                                .build())));
 
 
     }
