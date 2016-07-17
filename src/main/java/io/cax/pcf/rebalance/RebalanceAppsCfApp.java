@@ -4,7 +4,11 @@ import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.operations.applications.RestartApplicationInstanceRequest;
-import org.cloudfoundry.spring.client.SpringCloudFoundryClient;
+import org.cloudfoundry.reactor.ConnectionContext;
+import org.cloudfoundry.reactor.DefaultConnectionContext;
+import org.cloudfoundry.reactor.TokenProvider;
+import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
+import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,14 +34,26 @@ public class RebalanceAppsCfApp implements CommandLineRunner {
     CloudFoundryOperations cloudFoundryOperations;
 
     @Bean
-    CloudFoundryClient cloudFoundryClient(@Value("${cf.host}") String host,
-                                          @Value("${cf.username}") String username,
-                                          @Value("${cf.password}") String password) {
-        return SpringCloudFoundryClient.builder()
-                .host(host)
-                .skipSslValidation(true)
-                .username(username)
+    DefaultConnectionContext connectionContext(@Value("${cf.host}") String apiHost) {
+        return DefaultConnectionContext.builder()
+                .apiHost(apiHost)
+                .build();
+    }
+
+    @Bean
+    PasswordGrantTokenProvider tokenProvider(@Value("${cf.username}") String username,
+                                             @Value("${cf.password}") String password) {
+        return PasswordGrantTokenProvider.builder()
                 .password(password)
+                .username(username)
+                .build();
+    }
+
+    @Bean
+    ReactorCloudFoundryClient cloudFoundryClient(ConnectionContext connectionContext, TokenProvider tokenProvider) {
+        return ReactorCloudFoundryClient.builder()
+                .connectionContext(connectionContext)
+                .tokenProvider(tokenProvider)
                 .build();
     }
 
