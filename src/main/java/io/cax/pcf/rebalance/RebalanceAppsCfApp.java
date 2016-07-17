@@ -23,14 +23,11 @@ public class RebalanceAppsCfApp implements CommandLineRunner {
     static final Logger LOG = LoggerFactory.getLogger(RebalanceAppsCfApp.class);
 
 
-    @Value("${cf.org}")
-    private String organisation;
-
-    @Value("${cf.space}")
-    private String space;
-
     @Autowired
     CloudFoundryClient cloudFoundryClient;
+
+    @Autowired
+    CloudFoundryOperations cloudFoundryOperations;
 
     @Bean
     CloudFoundryClient cloudFoundryClient(@Value("${cf.host}") String host,
@@ -44,21 +41,24 @@ public class RebalanceAppsCfApp implements CommandLineRunner {
                 .build();
     }
 
+    @Bean
+    CloudFoundryOperations cloudFoundryOperations(@Value("${cf.org}") String organisation,
+                                                  @Value("${cf.space}") String space) {
+
+        return DefaultCloudFoundryOperations.builder()
+                .cloudFoundryClient(cloudFoundryClient)
+                .organization(organisation)
+                .space(space)
+                .build();
+    }
+
+
     public static void main(String[] args) {
         SpringApplication.run(RebalanceAppsCfApp.class, args);
     }
 
     @Override
     public void run(String... strings) throws Exception {
-
-
-        CloudFoundryOperations cloudFoundryOperations = DefaultCloudFoundryOperations.builder()
-                .cloudFoundryClient(cloudFoundryClient)
-                .organization(organisation)
-                .space(space)
-                .build();
-
-
 
 
         cloudFoundryOperations
